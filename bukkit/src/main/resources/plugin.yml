@@ -1,0 +1,5 @@
+name: ReProtocol
+main: com.jnngl.reprotocol.Reprotocol
+version: ${version}
+author: JNNGL
+api-version: 1.13
