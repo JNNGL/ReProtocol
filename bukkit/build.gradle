@@ -1,0 +1,26 @@
+plugins {
+  id("java")
+}
+
+repositories {
+  maven {
+    url("https://hub.spigotmc.org/nexus/content/groups/public/")
+
+    content {
+      includeGroup("org.bukkit")
+    }
+  }
+}
+
+dependencies {
+  implementation(project(":reprotocol-common"))
+
+  compileOnly("io.netty:netty-all:4.1.82.Final")
+  compileOnly("org.bukkit:bukkit:1.12.2-R0.1-SNAPSHOT")
+}
+
+processResources {
+  filesMatching("plugin.yml") {
+    expand("version": version)
+  }
+}
