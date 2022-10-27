@@ -1,4 +1,4 @@
-package com.jnngl.reprotocol;
+package com.jnngl.reprotocol.util;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -48,13 +48,13 @@ public enum MinecraftVersion {
 
   static {
     int pvn = MINIMUM_VERSION.getProtocolVersion();
-    MinecraftVersion currentVersion = MINIMUM_VERSION;
+    MinecraftVersion currentVersion = UNDEFINED;
 
     while (currentVersion != MAXIMUM_VERSION) {
+      currentVersion = currentVersion.next();
       for (; pvn <= currentVersion.getProtocolVersion(); pvn++) {
         PVN_MAP.put(pvn, currentVersion);
       }
-      currentVersion = currentVersion.next();
     }
   }
 

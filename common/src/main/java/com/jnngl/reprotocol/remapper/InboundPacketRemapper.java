@@ -1,6 +1,8 @@
 package com.jnngl.reprotocol.remapper;
 
+import com.jnngl.reprotocol.Packet;
+
 public interface InboundPacketRemapper {
 
-  Object remap(RemappedPacket packet);
+  Object remap(Packet packet);
 }

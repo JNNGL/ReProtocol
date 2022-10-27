@@ -1,0 +1,11 @@
+plugins {
+  id("java")
+}
+
+java.targetCompatibility(JavaVersion.VERSION_17)
+
+dependencies {
+  compileOnly(project(":bukkit:adapter"))
+
+  compileOnly(files(downloadAndRemapServer("1.19.2")))
+}

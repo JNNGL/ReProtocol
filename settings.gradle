@@ -2,6 +2,8 @@ rootProject.setName("reprotocol")
 
 include("common")
 include("bukkit")
+include("bukkit:adapter")
+include("bukkit:adapter-1_19_2R1")
 
 project(":common").setName("reprotocol-common")
 project(":bukkit").setName("reprotocol-bukkit")

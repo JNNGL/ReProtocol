@@ -1,3 +1,12 @@
+buildscript {
+  dependencies {
+    classpath("net.md-5:SpecialSource:1.11.0")
+    classpath("commons-io:commons-io:2.6")
+    classpath("org.apache.commons:commons-compress:1.19")
+    classpath("com.google.guava:guava:28.0-jre")
+  }
+}
+
 plugins {
   id("java")
 }
@@ -13,4 +22,160 @@ allprojects {
   java.sourceCompatibility(JavaVersion.VERSION_1_8)
   java.targetCompatibility(JavaVersion.VERSION_1_8)
   compileJava.options.encoding("UTF-8")
+}
+
+import groovy.json.JsonSlurper
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
+import org.apache.commons.io.IOUtils
+import org.apache.commons.io.FileUtils
+import com.google.common.hash.Hashing
+import com.google.common.io.Files
+import net.md_5.specialsource.Jar
+import net.md_5.specialsource.JarMapping
+import net.md_5.specialsource.JarRemapper
+import net.md_5.specialsource.provider.JarProvider
+import net.md_5.specialsource.provider.JointProvider
+
+project.ext.manifestUrl = "https://launchermeta.mojang.com/mc/game/version_manifest.json"
+project.ext.dataDirectory = "${rootProject.projectDir}/.gradle/minecraft"
+
+task downloadManifest {
+  FileUtils.copyURLToFile(new URL(manifestUrl), new File(dataDirectory, "version_manifest.json"))
+}
+
+void downloadVersionManifest(String version) {
+  logger.lifecycle("Downloading manifest")
+
+  var manifest = new JsonSlurper().parse(new File(dataDirectory, "version_manifest.json"))
+  var optional = manifest.versions.stream().filter({it.id == version}).findFirst()
+  if (optional.empty()) {
+    throw new RuntimeException("Couldn't find version: ${version}")
+  }
+
+  File outFile = new File(dataDirectory, "version_${version}.json")
+  FileUtils.copyURLToFile(new URL(optional.get().url), outFile)
+}
+
+static boolean validateFile(File file, String sha1) {
+  if (file == null || !file.exists()) {
+    return false
+  }
+
+  def hash = Files.asByteSource(file).hash(Hashing.sha1())
+  StringBuilder stringBuilder = new StringBuilder()
+  hash.asBytes().each({stringBuilder.append(Integer.toString((it & 0xFF) + 0x100, 16).substring(1))})
+  return stringBuilder.toString() == sha1
+}
+
+static String getSpigotMappings(String version) {
+  // TODO: Find a better way
+  String content = new URL("https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/commits").text
+  content = content.substring(content.indexOf("\"Update to Minecraft ${version}\""))
+  content = content.substring(content.indexOf("data-commitid=\"") + 15)
+  String commitId = content.substring(0, content.indexOf('"'))
+  return String.join('\n',
+      new URL("https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/raw/mappings?at=${commitId}").readLines()
+      .stream()
+      .filter({it.endsWith(".csrg")})
+      .map({it.substring(it.indexOf("bukkit-${version}"))})
+      .map({new URL("https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/raw/mappings/${it}?at=${commitId}").text})
+      .toArray(String[]::new))
+}
+
+boolean downloadServer(String version) {
+  downloadVersionManifest(version)
+  var manifest = new JsonSlurper().parse(new File(dataDirectory, "version_${version}.json"))
+  boolean shouldBeRemapped = false
+
+  File jarFile = new File(dataDirectory, "server_${version}.jar")
+  if (!validateFile(jarFile, manifest.downloads.server.sha1)) {
+    logger.lifecycle("Downloading ${version} server")
+    FileUtils.copyURLToFile(new URL(manifest.downloads.server.url), jarFile)
+    shouldBeRemapped = true
+  }
+
+  File mappingsFile = new File(dataDirectory, "server_${version}_mappings.json")
+
+  // Official mappings
+  // if (!validateFile(mappingsFile, manifest.downloads.server_mappings.sha1)) {
+  //   logger.lifecycle("Downloading ${version} server mappings")
+  //   FileUtils.copyURLToFile(new URL(manifest.downloads.server_mappings.url), mappingsFile)
+  // }
+
+  // Spigot mappings
+  logger.lifecycle("Downloading ${version} server mappings")
+  FileUtils.writeStringToFile(mappingsFile, getSpigotMappings(version))
+
+  return shouldBeRemapped
+}
+
+void extractServer(String version) {
+  logger.lifecycle("Extracting ${version} server")
+  File extractedJar = new File(dataDirectory, "server_${version}_extracted.jar")
+
+  ZipArchiveOutputStream zipOut = new ZipArchiveOutputStream(extractedJar)
+
+  new ZipArchiveInputStream(new FileInputStream(new File(dataDirectory, "server_${version}.jar")))
+  .with({
+    for (ZipArchiveEntry entry; (entry = it.getNextZipEntry()) != null;) {
+      if (entry.getName().endsWith(".jar")) {
+        new ZipArchiveInputStream(it)
+        .with({
+          for (ZipArchiveEntry e = it.getNextZipEntry(); (e = it.getNextZipEntry()) != null;) {
+            zipOut.putArchiveEntry(new ZipArchiveEntry(e))
+            IOUtils.copy(it, zipOut)
+            zipOut.closeArchiveEntry()
+          }
+        })
+      }
+    }
+  })
+
+  zipOut.close()
+}
+
+void remapJar(File inputFile, File outputFile, File mappingsFile) {
+  logger.lifecycle("Remapping ${inputFile.getName()}")
+
+  Jar jar = Jar.init(inputFile)
+
+  JarMapping mapping = new JarMapping()
+  mapping.loadMappings(mappingsFile)
+
+  JointProvider provider = new JointProvider()
+  provider.add(new JarProvider(jar))
+  mapping.setFallbackInheritanceProvider(provider)
+
+  JarRemapper remapper = new JarRemapper(mapping)
+  remapper.remapJar(jar, outputFile)
+}
+
+String downloadAndRemapServer(String version) {
+  File extractedJar = new File(dataDirectory, "server_${version}_extracted.jar")
+  File remappedJar = new File(dataDirectory, "server_${version}_remapped.jar")
+  File mappingsFile = new File(dataDirectory, "server_${version}_mappings.json")
+
+  boolean shouldRemap = downloadServer(version)
+
+  if (shouldRemap || !extractedJar.exists()) {
+    extractServer(version)
+  }
+
+  if (shouldRemap || !remappedJar.exists()) {
+    remapJar(extractedJar, remappedJar, mappingsFile)
+  }
+
+  return remappedJar.getAbsolutePath()
+}
+
+dependencies {
+  downloadManifest
+}
+
+clean {
+  doLast {
+    new File(dataDirectory).deleteDir()
+  }
 }

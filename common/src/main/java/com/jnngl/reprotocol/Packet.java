@@ -1,5 +1,6 @@
 package com.jnngl.reprotocol;
 
+import com.jnngl.reprotocol.util.MinecraftVersion;
 import io.netty.buffer.ByteBuf;
 
 public interface Packet {
