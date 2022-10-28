@@ -1,8 +1,11 @@
 package com.jnngl.reprotocol.util;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.UUID;
 
 public class ProtocolUtils {
 
@@ -71,7 +74,7 @@ public class ProtocolUtils {
     }
   }
 
-  public void writeVarLong(ByteBuf buf, long value) {
+  public static void writeVarLong(ByteBuf buf, long value) {
     while (true) {
       if ((value & ~((long) SEGMENT_BITS)) == 0) {
         buf.writeByte((int) value);
@@ -81,5 +84,62 @@ public class ProtocolUtils {
       buf.writeByte((int) ((value & SEGMENT_BITS) | CONTINUE_BIT));
       value >>>= 7;
     }
+  }
+
+  public static void writePrefixedBuf(ByteBuf buf, ByteBuf data) {
+    if (data != null) {
+      writeVarInt(buf, data.readableBytes());
+      buf.writeBytes(data);
+    } else {
+      buf.writeByte(0);
+    }
+  }
+
+  public static ByteBuf readPrefixedBuf(ByteBuf buf) {
+    int length = readVarInt(buf);
+
+    if (length > 0) {
+      return Unpooled.buffer(length).writeBytes(buf, length);
+    } else {
+      return null;
+    }
+  }
+
+  public static void writePrefixedBytes(ByteBuf buf, byte[] data) {
+    if (data != null) {
+      writeVarInt(buf, data.length);
+      buf.writeBytes(data);
+    } else {
+      buf.writeByte(0);
+    }
+  }
+
+  public static byte[] readPrefixedBytes(ByteBuf buf) {
+    int length = readVarInt(buf);
+
+    if (length > 0) {
+      byte[] bytes = new byte[length];
+      buf.readBytes(bytes, 0, length);
+      return bytes;
+    } else {
+      return null;
+    }
+  }
+
+  public static void writeUUID(ByteBuf buf, UUID uuid) {
+    buf.writeLong(uuid.getMostSignificantBits());
+    buf.writeLong(uuid.getLeastSignificantBits());
+  }
+
+  public static UUID readUUID(ByteBuf buf) {
+    return new UUID(buf.readLong(), buf.readLong());
+  }
+
+  public static void writeInstant(ByteBuf buf, Instant instant) {
+    buf.writeLong(instant.toEpochMilli());
+  }
+
+  public static Instant readInstant(ByteBuf buf) {
+    return Instant.ofEpochMilli(buf.readLong());
   }
 }

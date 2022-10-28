@@ -2,6 +2,14 @@ package com.jnngl.reprotocol.packet;
 
 import com.jnngl.reprotocol.ConnectionState;
 import com.jnngl.reprotocol.packet.handshake.Handshake;
+import com.jnngl.reprotocol.packet.login.EncryptionRequest;
+import com.jnngl.reprotocol.packet.login.EncryptionResponse;
+import com.jnngl.reprotocol.packet.login.LoginDisconnect;
+import com.jnngl.reprotocol.packet.login.LoginPluginRequest;
+import com.jnngl.reprotocol.packet.login.LoginPluginResponse;
+import com.jnngl.reprotocol.packet.login.LoginStart;
+import com.jnngl.reprotocol.packet.login.LoginSuccess;
+import com.jnngl.reprotocol.packet.login.SetCompression;
 import com.jnngl.reprotocol.packet.status.StatusPing;
 import com.jnngl.reprotocol.packet.status.StatusRequest;
 import com.jnngl.reprotocol.packet.status.StatusResponse;
@@ -50,12 +58,26 @@ public class GenericPacketRegistry {
     return new PacketRegistry(new HashMap<>() {{
       put(ConnectionState.HANDSHAKE, HANDSHAKE_STATE_REGISTRY);
       put(ConnectionState.STATUS, C2S_STATUS_STATE_REGISTRY);
+
+      put(ConnectionState.LOGIN, new StatePacketRegistry(new HashMap<>() {{
+        put(0x00, LoginStart::new);
+        put(0x01, EncryptionResponse::new);
+        put(0x02, LoginPluginResponse::new);
+      }}));
     }});
   }
 
   private static PacketRegistry createRegistry1_19_1S2C() {
     return new PacketRegistry(new HashMap<>() {{
       put(ConnectionState.STATUS, S2C_STATUS_STATE_REGISTRY);
+
+      put(ConnectionState.LOGIN, new StatePacketRegistry(new HashMap<>() {{
+        put(0x00, LoginDisconnect::new);
+        put(0x01, EncryptionRequest::new);
+        put(0x02, LoginSuccess::new);
+        put(0x03, SetCompression::new);
+        put(0x04, LoginPluginRequest::new);
+      }}));
     }});
   }
 
