@@ -70,7 +70,6 @@ static boolean validateFile(File file, String sha1) {
 }
 
 static String getSpigotMappings(String version) {
-  // TODO: Find a better way
   String content = new URL("https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/commits").text
   content = content.substring(content.indexOf("\"Update to Minecraft ${version}\""))
   content = content.substring(content.indexOf("data-commitid=\"") + 15)
@@ -98,15 +97,17 @@ boolean downloadServer(String version) {
 
   File mappingsFile = new File(dataDirectory, "server_${version}_mappings.json")
 
-  // Official mappings
-  // if (!validateFile(mappingsFile, manifest.downloads.server_mappings.sha1)) {
-  //   logger.lifecycle("Downloading ${version} server mappings")
-  //   FileUtils.copyURLToFile(new URL(manifest.downloads.server_mappings.url), mappingsFile)
-  // }
+  if (shouldBeRemapped || !mappingsFile.exists()) {
+    // Official mappings
+    // if (!validateFile(mappingsFile, manifest.downloads.server_mappings.sha1)) {
+    //   logger.lifecycle("Downloading ${version} server mappings")
+    //   FileUtils.copyURLToFile(new URL(manifest.downloads.server_mappings.url), mappingsFile)
+    // }
 
-  // Spigot mappings
-  logger.lifecycle("Downloading ${version} server mappings")
-  FileUtils.writeStringToFile(mappingsFile, getSpigotMappings(version))
+    // Spigot mappings
+    logger.lifecycle("Downloading ${version} server mappings")
+    FileUtils.writeStringToFile(mappingsFile, getSpigotMappings(version))
+  }
 
   return shouldBeRemapped
 }
@@ -123,7 +124,7 @@ void extractServer(String version) {
       if (entry.getName().endsWith(".jar")) {
         new ZipArchiveInputStream(it)
         .with({
-          for (ZipArchiveEntry e = it.getNextZipEntry(); (e = it.getNextZipEntry()) != null;) {
+          for (ZipArchiveEntry e; (e = it.getNextZipEntry()) != null;) {
             zipOut.putArchiveEntry(new ZipArchiveEntry(e))
             IOUtils.copy(it, zipOut)
             zipOut.closeArchiveEntry()
