@@ -119,7 +119,7 @@ public class ProtocolUtils {
 
     if (length > 0) {
       byte[] bytes = new byte[length];
-      buf.readBytes(bytes, 0, length);
+      buf.readBytes(bytes);
       return bytes;
     } else {
       return null;
