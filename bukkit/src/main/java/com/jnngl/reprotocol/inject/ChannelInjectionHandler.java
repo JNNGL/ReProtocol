@@ -21,7 +21,7 @@ class ChannelInjectionHandler extends ChannelInboundHandlerAdapter {
   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
     Channel channel = (Channel) msg;
 
-    channel.pipeline().addLast(new ChannelInitializer<Channel>() {
+    channel.pipeline().addLast(new ChannelInitializer<>() {
 
       @Override
       protected void initChannel(Channel channel) {

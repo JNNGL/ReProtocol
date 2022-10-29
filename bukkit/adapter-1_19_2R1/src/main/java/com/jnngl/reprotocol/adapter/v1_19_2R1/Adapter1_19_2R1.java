@@ -18,7 +18,7 @@ import com.jnngl.reprotocol.packet.login.SetCompression;
 import com.jnngl.reprotocol.packet.status.StatusPing;
 import com.jnngl.reprotocol.packet.status.StatusRequest;
 import com.jnngl.reprotocol.packet.status.StatusResponse;
-import com.jnngl.reprotocol.registry.VersionPacketRegistry;
+import com.jnngl.reprotocol.packet.registry.VersionPacketRegistry;
 import com.jnngl.reprotocol.remapper.InboundPacketRemapper;
 import com.jnngl.reprotocol.remapper.OutboundPacketRemapper;
 import com.jnngl.reprotocol.remapper.PacketRemapper;

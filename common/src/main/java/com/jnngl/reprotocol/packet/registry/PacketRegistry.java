@@ -1,8 +1,8 @@
-package com.jnngl.reprotocol.registry;
+package com.jnngl.reprotocol.packet.registry;
 
 import com.jnngl.reprotocol.ConnectionState;
+import com.jnngl.reprotocol.util.MapBuilder;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class PacketRegistry {
@@ -15,12 +15,14 @@ public class PacketRegistry {
 
   public PacketRegistry(StatePacketRegistry handshake, StatePacketRegistry status,
                         StatePacketRegistry login, StatePacketRegistry play) {
-    this(new HashMap<ConnectionState, StatePacketRegistry>() {{
-      put(ConnectionState.HANDSHAKE, handshake);
-      put(ConnectionState.STATUS, status);
-      put(ConnectionState.LOGIN, login);
-      put(ConnectionState.PLAY, play);
-    }});
+    this(
+        new MapBuilder<ConnectionState, StatePacketRegistry>()
+            .put(ConnectionState.HANDSHAKE, handshake)
+            .put(ConnectionState.STATUS, status)
+            .put(ConnectionState.LOGIN, login)
+            .put(ConnectionState.PLAY, play)
+            .getUnmodifiable()
+    );
   }
 
   public Map<ConnectionState, StatePacketRegistry> getStateRegistries() {

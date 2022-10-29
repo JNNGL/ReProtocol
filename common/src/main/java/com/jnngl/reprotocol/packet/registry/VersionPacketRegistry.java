@@ -1,4 +1,4 @@
-package com.jnngl.reprotocol.registry;
+package com.jnngl.reprotocol.packet.registry;
 
 import com.jnngl.reprotocol.util.MinecraftVersion;
 

@@ -2,6 +2,9 @@ plugins {
   id("java")
 }
 
+java.setSourceCompatibility(JavaVersion.VERSION_1_8)
+java.setTargetCompatibility(JavaVersion.VERSION_1_8)
+
 dependencies {
   compileOnly("io.netty:netty-all:4.1.82.Final")
 }

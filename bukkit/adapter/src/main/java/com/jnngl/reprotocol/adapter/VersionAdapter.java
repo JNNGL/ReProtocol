@@ -1,7 +1,7 @@
 package com.jnngl.reprotocol.adapter;
 
 import com.jnngl.reprotocol.Packet;
-import com.jnngl.reprotocol.registry.VersionPacketRegistry;
+import com.jnngl.reprotocol.packet.registry.VersionPacketRegistry;
 import com.jnngl.reprotocol.remapper.InboundPacketRemapper;
 import com.jnngl.reprotocol.remapper.OutboundPacketRemapper;
 import com.jnngl.reprotocol.remapper.PacketRemapper;

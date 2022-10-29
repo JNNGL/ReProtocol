@@ -1,7 +1,7 @@
 package com.jnngl.reprotocol.remapper;
 
 import com.jnngl.reprotocol.Packet;
-import com.jnngl.reprotocol.registry.VersionPacketRegistry;
+import com.jnngl.reprotocol.packet.registry.VersionPacketRegistry;
 
 import java.util.Map;
 
