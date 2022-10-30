@@ -3,10 +3,12 @@ package com.jnngl.reprotocol;
 import com.jnngl.reprotocol.adapter.VersionAdapter;
 import com.jnngl.reprotocol.adapter.v1_19_2R1.Adapter1_19_2R1;
 import com.jnngl.reprotocol.inject.Injector;
+import com.jnngl.reprotocol.listener.HandshakeListener;
 import com.jnngl.reprotocol.packet.GenericPacketDecoder;
 import com.jnngl.reprotocol.packet.GenericPacketEncoder;
 import com.jnngl.reprotocol.packet.GenericPacketRegistry;
 import com.jnngl.reprotocol.packet.handshake.Handshake;
+import com.jnngl.reprotocol.packet.login.LoginSuccess;
 import com.jnngl.reprotocol.remapper.PacketRemapper;
 import com.jnngl.reprotocol.remapper.handler.InboundRemapHandler;
 import com.jnngl.reprotocol.remapper.handler.OutboundRemapHandler;
@@ -33,17 +35,7 @@ public class Reprotocol extends JavaPlugin {
       channel.pipeline().replace("encoder", "encoder", new GenericPacketEncoder(packetRemapper, connectionData));
       channel.pipeline().addAfter("encoder", "outbound_remapper", new OutboundRemapHandler(packetRemapper));
 
-      channel.pipeline().addBefore("inbound_remapper", "remapped_packet_handler", new ChannelInboundHandlerAdapter() {
-        @Override
-        public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-          if (msg instanceof Handshake handshake) {
-            connectionData.setVersion(handshake.getVersion());
-            connectionData.setState(handshake.getNextState());
-          }
-
-          super.channelRead(ctx, msg);
-        }
-      });
+      channel.pipeline().addBefore("inbound_remapper", "handshake_listener", new HandshakeListener(connectionData));
 
       channel.pipeline().addBefore("packet_handler", "test", new ChannelDuplexHandler() {
         @Override

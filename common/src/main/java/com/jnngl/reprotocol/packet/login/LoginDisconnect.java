@@ -34,4 +34,11 @@ public class LoginDisconnect implements Packet {
   public void setReason(String reason) {
     this.reason = reason;
   }
+
+  @Override
+  public String toString() {
+    return "LoginDisconnect{" +
+        "reason='" + reason + '\'' +
+        '}';
+  }
 }

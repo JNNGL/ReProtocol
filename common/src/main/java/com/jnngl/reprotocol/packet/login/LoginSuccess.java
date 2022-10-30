@@ -30,4 +30,11 @@ public class LoginSuccess implements Packet {
   public GameProfile getGameProfile() {
     return gameProfile;
   }
+
+  @Override
+  public String toString() {
+    return "LoginSuccess{" +
+        "gameProfile=" + gameProfile +
+        '}';
+  }
 }

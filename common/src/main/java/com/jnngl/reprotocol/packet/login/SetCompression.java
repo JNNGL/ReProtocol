@@ -30,4 +30,11 @@ public class SetCompression implements Packet {
   public int getThreshold() {
     return threshold;
   }
+
+  @Override
+  public String toString() {
+    return "SetCompression{" +
+        "threshold=" + threshold +
+        '}';
+  }
 }

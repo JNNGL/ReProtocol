@@ -37,6 +37,15 @@ public class GameProfile {
     public String getSignature() {
       return signature;
     }
+
+    @Override
+    public String toString() {
+      return "Property{" +
+          "name='" + name + '\'' +
+          ", value='" + value + '\'' +
+          ", signature='" + signature + '\'' +
+          '}';
+    }
   }
 
   private final UUID uuid;
@@ -90,5 +99,14 @@ public class GameProfile {
         buf.writeBoolean(false);
       }
     }
+  }
+
+  @Override
+  public String toString() {
+    return "GameProfile{" +
+        "uuid=" + uuid +
+        ", username='" + username + '\'' +
+        ", properties=" + properties +
+        '}';
   }
 }

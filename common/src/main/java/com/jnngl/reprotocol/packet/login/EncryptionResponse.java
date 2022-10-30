@@ -5,6 +5,8 @@ import com.jnngl.reprotocol.util.MinecraftVersion;
 import com.jnngl.reprotocol.util.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+import java.util.Arrays;
+
 public class EncryptionResponse implements Packet {
 
   private byte[] sharedSecret;
@@ -74,5 +76,16 @@ public class EncryptionResponse implements Packet {
 
   public byte[] getMessageSignature() {
     return messageSignature;
+  }
+
+  @Override
+  public String toString() {
+    return "EncryptionResponse{" +
+        "sharedSecret=" + Arrays.toString(sharedSecret) +
+        ", hasVerifyToken=" + hasVerifyToken +
+        ", verifyToken=" + Arrays.toString(verifyToken) +
+        ", salt=" + salt +
+        ", messageSignature=" + Arrays.toString(messageSignature) +
+        '}';
   }
 }

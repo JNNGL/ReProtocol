@@ -61,4 +61,13 @@ public class LoginStart implements Packet {
   public UUID getPlayerUUID() {
     return playerUUID;
   }
+
+  @Override
+  public String toString() {
+    return "LoginStart{" +
+        "name='" + name + '\'' +
+        ", signatureData=" + signatureData +
+        ", playerUUID=" + playerUUID +
+        '}';
+  }
 }

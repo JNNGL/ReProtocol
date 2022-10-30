@@ -52,4 +52,12 @@ public class LoginPluginResponse implements Packet {
   public ByteBuf getData() {
     return data;
   }
+
+  @Override
+  public String toString() {
+    return "LoginPluginResponse{" +
+        "messageID=" + messageID +
+        ", data=" + data +
+        '}';
+  }
 }

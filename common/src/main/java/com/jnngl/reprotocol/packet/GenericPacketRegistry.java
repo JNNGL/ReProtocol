@@ -11,6 +11,7 @@ import com.jnngl.reprotocol.packet.login.LoginPluginResponse;
 import com.jnngl.reprotocol.packet.login.LoginStart;
 import com.jnngl.reprotocol.packet.login.LoginSuccess;
 import com.jnngl.reprotocol.packet.login.SetCompression;
+import com.jnngl.reprotocol.packet.play.JoinGame;
 import com.jnngl.reprotocol.packet.status.StatusPing;
 import com.jnngl.reprotocol.packet.status.StatusRequest;
 import com.jnngl.reprotocol.packet.status.StatusResponse;
@@ -92,6 +93,12 @@ public class GenericPacketRegistry {
                         .put(0x02, LoginSuccess::new)
                         .put(0x03, SetCompression::new)
                         .put(0x04, LoginPluginRequest::new)
+                        .getUnmodifiable()
+                )
+            )
+            .put(ConnectionState.PLAY, new StatePacketRegistry(
+                    new MapBuilder<Integer, Supplier<Packet>>()
+                        .put(0x25, JoinGame::new)
                         .getUnmodifiable()
                 )
             )

@@ -3,10 +3,11 @@ package com.jnngl.reprotocol.data.nbt;
 import io.netty.buffer.ByteBuf;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 
-public class TagList<T extends NbtTag> extends NbtTag {
+public class TagList<T extends NbtTag> extends NbtTag implements Iterable<T> {
 
   private List<T> value;
 
@@ -62,11 +63,20 @@ public class TagList<T extends NbtTag> extends NbtTag {
     this.value = value;
   }
 
+  public void add(T nbtTag) {
+    value.add(nbtTag);
+  }
+
   @Override
   public String toString() {
     String[] values = value.stream().map(NbtTag::toString).toArray(String[]::new);
     String valueString = String.join("\n", values);
     String withName = "Compound('" + getName() + "'): \n" + valueString;
     return withName.replace("\n", "\n  ");
+  }
+
+  @Override
+  public Iterator<T> iterator() {
+    return value.iterator();
   }
 }

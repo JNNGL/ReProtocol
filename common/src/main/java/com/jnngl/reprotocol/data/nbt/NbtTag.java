@@ -2,7 +2,9 @@ package com.jnngl.reprotocol.data.nbt;
 
 import io.netty.buffer.ByteBuf;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -28,6 +30,10 @@ public abstract class NbtTag {
 
   public static TagByte of(String name, byte value) {
     return new TagByte(name, value);
+  }
+
+  public static TagByte of(String name, boolean value) {
+    return new TagByte(name, (byte) (value ? 1 : 0));
   }
 
   public static TagByteArray of(String name, byte[] value) {
@@ -76,5 +82,13 @@ public abstract class NbtTag {
 
   public static TagString of(String name, String value) {
     return new TagString(name, value);
+  }
+
+  public static <T extends NbtTag> TagList<T> emptyList(String name) {
+    return new TagList<>(name, new ArrayList<>());
+  }
+
+  public static TagCompound emptyCompound(String name) {
+    return new TagCompound(name, new LinkedHashSet<>());
   }
 }

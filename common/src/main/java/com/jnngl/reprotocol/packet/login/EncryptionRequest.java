@@ -5,6 +5,8 @@ import com.jnngl.reprotocol.util.MinecraftVersion;
 import com.jnngl.reprotocol.util.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
 
+import java.util.Arrays;
+
 public class EncryptionRequest implements Packet {
 
   private String serverID;
@@ -57,5 +59,14 @@ public class EncryptionRequest implements Packet {
 
   public void setVerifyToken(byte[] verifyToken) {
     this.verifyToken = verifyToken;
+  }
+
+  @Override
+  public String toString() {
+    return "EncryptionRequest{" +
+        "serverID='" + serverID + '\'' +
+        ", publicKey=" + Arrays.toString(publicKey) +
+        ", verifyToken=" + Arrays.toString(verifyToken) +
+        '}';
   }
 }

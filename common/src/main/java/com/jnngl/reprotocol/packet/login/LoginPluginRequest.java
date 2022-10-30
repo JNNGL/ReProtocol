@@ -53,4 +53,13 @@ public class LoginPluginRequest implements Packet {
   public ByteBuf getData() {
     return data;
   }
+
+  @Override
+  public String toString() {
+    return "LoginPluginRequest{" +
+        "messageID=" + messageID +
+        ", channel='" + channel + '\'' +
+        ", data=" + data +
+        '}';
+  }
 }
