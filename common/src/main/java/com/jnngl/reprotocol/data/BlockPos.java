@@ -4,6 +4,8 @@ import io.netty.buffer.ByteBuf;
 
 public class BlockPos {
 
+  public static final BlockPos ZERO = new BlockPos(0, 0, 0);
+
   private final int x;
   private final int y;
   private final int z;
@@ -40,5 +42,33 @@ public class BlockPos {
     int y = (int) (position << 52 >> 52);
     int z = (int) (position << 26 >> 38);
     return new BlockPos(x, y, z);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    BlockPos blockPos = (BlockPos) o;
+
+    if (x != blockPos.x) {
+      return false;
+    }
+    if (y != blockPos.y) {
+      return false;
+    }
+    return z == blockPos.z;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = x;
+    result = 31 * result + y;
+    result = 31 * result + z;
+    return result;
   }
 }

@@ -3,7 +3,7 @@ package com.jnngl.reprotocol.packet.play;
 import com.jnngl.reprotocol.Packet;
 import com.jnngl.reprotocol.data.GlobalBlockPos;
 import com.jnngl.reprotocol.data.nbt.Nbt;
-import com.jnngl.reprotocol.data.registry.RegistryCodec;
+import com.jnngl.reprotocol.data.codec.RegistryCodec;
 import com.jnngl.reprotocol.util.MinecraftVersion;
 import com.jnngl.reprotocol.util.ProtocolUtils;
 import io.netty.buffer.ByteBuf;

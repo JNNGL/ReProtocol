@@ -28,7 +28,7 @@ public class GenericPacketDecoder extends ByteToMessageDecoder {
         .getInboundPacketRegistry()
         .getRegistry(connectionData.getVersion())
         .getStateRegistry(connectionData.getState())
-        .getPacket(packetID);
+        .get(packetID);
     if (packet == null) {
       throw new IOException("Unknown packet: " + packetID +
           " (State: " + connectionData.getState() + ", version: " + connectionData.getVersion() + ")");

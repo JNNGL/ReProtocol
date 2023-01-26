@@ -1,5 +1,6 @@
 package com.jnngl.reprotocol.remapper.handler;
 
+import com.jnngl.reprotocol.remapper.OutboundPacketRemapper;
 import com.jnngl.reprotocol.remapper.PacketRemapper;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
@@ -16,7 +17,12 @@ public class OutboundRemapHandler extends MessageToMessageEncoder<Object> {
 
   @Override
   protected void encode(ChannelHandlerContext ctx, Object msg, List<Object> out) {
-    out.add(packetRemapper.getOutboundRemapper().get(msg.getClass()).remap(msg));
+    OutboundPacketRemapper remapper = packetRemapper.getOutboundRemapper().get(msg.getClass());
+    if (remapper != null) {
+      out.add(remapper.remap(msg));
+    } else {
+      throw new IllegalStateException("Couldn't find remapper for " + msg.getClass().getName());
+    }
   }
 
   public PacketRemapper getPacketRemapper() {

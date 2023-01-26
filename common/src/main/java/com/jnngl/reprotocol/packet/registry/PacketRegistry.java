@@ -1,22 +1,24 @@
 package com.jnngl.reprotocol.packet.registry;
 
 import com.jnngl.reprotocol.ConnectionState;
+import com.jnngl.reprotocol.Packet;
+import com.jnngl.reprotocol.data.registry.Registry;
 import com.jnngl.reprotocol.util.MapBuilder;
 
 import java.util.Map;
 
 public class PacketRegistry {
 
-  private final Map<ConnectionState, StatePacketRegistry> stateRegistries;
+  private final Map<ConnectionState, Registry<Packet>> stateRegistries;
 
-  public PacketRegistry(Map<ConnectionState, StatePacketRegistry> stateRegistries) {
+  public PacketRegistry(Map<ConnectionState, Registry<Packet>> stateRegistries) {
     this.stateRegistries = stateRegistries;
   }
 
-  public PacketRegistry(StatePacketRegistry handshake, StatePacketRegistry status,
-                        StatePacketRegistry login, StatePacketRegistry play) {
+  public PacketRegistry(Registry<Packet> handshake, Registry<Packet> status,
+                        Registry<Packet> login, Registry<Packet> play) {
     this(
-        new MapBuilder<ConnectionState, StatePacketRegistry>()
+        new MapBuilder<ConnectionState, Registry<Packet>>()
             .put(ConnectionState.HANDSHAKE, handshake)
             .put(ConnectionState.STATUS, status)
             .put(ConnectionState.LOGIN, login)
@@ -25,27 +27,27 @@ public class PacketRegistry {
     );
   }
 
-  public Map<ConnectionState, StatePacketRegistry> getStateRegistries() {
+  public Map<ConnectionState, Registry<Packet>> getStateRegistries() {
     return stateRegistries;
   }
 
-  public StatePacketRegistry getHandshakeRegistry() {
+  public Registry<Packet> getHandshakeRegistry() {
     return stateRegistries.get(ConnectionState.HANDSHAKE);
   }
 
-  public StatePacketRegistry getStatusRegistry() {
+  public Registry<Packet> getStatusRegistry() {
     return stateRegistries.get(ConnectionState.STATUS);
   }
 
-  public StatePacketRegistry getLoginRegistry() {
+  public Registry<Packet> getLoginRegistry() {
     return stateRegistries.get(ConnectionState.LOGIN);
   }
 
-  public StatePacketRegistry getPlayRegistry() {
+  public Registry<Packet> getPlayRegistry() {
     return stateRegistries.get(ConnectionState.PLAY);
   }
 
-  public StatePacketRegistry getStateRegistry(ConnectionState state) {
+  public Registry<Packet> getStateRegistry(ConnectionState state) {
     return stateRegistries.get(state);
   }
 }
