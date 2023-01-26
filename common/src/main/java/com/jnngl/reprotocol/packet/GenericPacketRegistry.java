@@ -24,6 +24,7 @@ import com.jnngl.reprotocol.packet.play.ServerSetHeldItem;
 import com.jnngl.reprotocol.packet.play.SetCenterChunk;
 import com.jnngl.reprotocol.packet.play.SetRenderDistance;
 import com.jnngl.reprotocol.packet.play.SetSimulationDistance;
+import com.jnngl.reprotocol.packet.play.SpawnEntity;
 import com.jnngl.reprotocol.packet.play.SynchronizePlayerPosition;
 import com.jnngl.reprotocol.packet.play.SystemChat;
 import com.jnngl.reprotocol.packet.play.UpdateRecipeBook;
@@ -42,7 +43,7 @@ import java.util.function.Supplier;
 
 public class GenericPacketRegistry {
 
-  /*** COMMON STATE REGISTRIES ***/
+  /* COMMON STATE REGISTRIES */
 
   private static final Registry<Packet> HANDSHAKE_STATE_REGISTRY =
       new ClassRegistry<>(Collections.singletonMap(0x00, Handshake::new));
@@ -63,7 +64,7 @@ public class GenericPacketRegistry {
               .getUnmodifiable()
       );
 
-  /*** VERSION REGISTRIES ***/
+  /* VERSION REGISTRIES */
 
   private static final VersionPacketRegistry SERVERBOUND_PACKET_REGISTRY =
       new VersionPacketRegistry(
@@ -79,7 +80,7 @@ public class GenericPacketRegistry {
               .getUnmodifiable()
       );
 
-  /*** 1.19.1 ***/
+  /* 1.19.1 */
 
   private static PacketRegistry createRegistry1_19_1C2S() {
     return new PacketRegistry(
@@ -114,6 +115,7 @@ public class GenericPacketRegistry {
             )
             .put(ConnectionState.PLAY, new ClassRegistry<>(
                     new MapBuilder<Integer, Supplier<Packet>>()
+                        .put(0x00, SpawnEntity::new)
                         .put(0x0B, ChangeDifficulty::new)
                         .put(0x16, PluginMessage::new)
                         .put(0x19, Disconnect::new)
@@ -137,7 +139,7 @@ public class GenericPacketRegistry {
     );
   }
 
-  /*** GETTERS ***/
+  /* GETTERS */
 
   public static VersionPacketRegistry getServerboundRegistry() {
     return SERVERBOUND_PACKET_REGISTRY;

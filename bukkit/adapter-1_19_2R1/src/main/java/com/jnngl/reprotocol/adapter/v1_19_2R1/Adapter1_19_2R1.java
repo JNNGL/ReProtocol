@@ -44,6 +44,7 @@ import com.jnngl.reprotocol.packet.play.ServerSetHeldItem;
 import com.jnngl.reprotocol.packet.play.SetCenterChunk;
 import com.jnngl.reprotocol.packet.play.SetRenderDistance;
 import com.jnngl.reprotocol.packet.play.SetSimulationDistance;
+import com.jnngl.reprotocol.packet.play.SpawnEntity;
 import com.jnngl.reprotocol.packet.play.SynchronizePlayerPosition;
 import com.jnngl.reprotocol.packet.play.SystemChat;
 import com.jnngl.reprotocol.packet.play.UpdateRecipeBook;
@@ -82,6 +83,7 @@ import net.minecraft.network.protocol.game.PacketPlayOutPosition;
 import net.minecraft.network.protocol.game.PacketPlayOutRecipeUpdate;
 import net.minecraft.network.protocol.game.PacketPlayOutRecipes;
 import net.minecraft.network.protocol.game.PacketPlayOutServerDifficulty;
+import net.minecraft.network.protocol.game.PacketPlayOutSpawnEntity;
 import net.minecraft.network.protocol.game.PacketPlayOutTags;
 import net.minecraft.network.protocol.game.PacketPlayOutViewCentre;
 import net.minecraft.network.protocol.game.PacketPlayOutViewDistance;
@@ -197,19 +199,19 @@ public class Adapter1_19_2R1 implements VersionAdapter {
     return EnumProtocol.a(state.ordinal());
   }
 
-  public static IChatBaseComponent toNMS(String component) {
+  private static IChatBaseComponent toNMS(String component) {
     return component != null ? IChatBaseComponent.a(component) : null;
   }
 
-  public static String fromNMS(IChatBaseComponent component) {
+  private static String fromNMS(IChatBaseComponent component) {
     return component != null ? IChatBaseComponent.ChatSerializer.a(component) : null;
   }
 
-  public static PacketDataSerializer toPacketSerializer(ByteBuf buf) {
+  private static PacketDataSerializer toPacketSerializer(ByteBuf buf) {
     return buf != null ? new PacketDataSerializer(buf) : null;
   }
 
-  public static GameProfile fromNMS(com.mojang.authlib.GameProfile profile) {
+  private static GameProfile fromNMS(com.mojang.authlib.GameProfile profile) {
     return new GameProfile(profile.getId(), profile.getName(),
         profile.getProperties().entries().stream().map(entry ->
                 new GameProfile.Property(
@@ -221,7 +223,7 @@ public class Adapter1_19_2R1 implements VersionAdapter {
     );
   }
 
-  public static ProfilePublicKey.a toNMS(SignatureData signatureData) throws CryptographyException {
+  private static ProfilePublicKey.a toNMS(SignatureData signatureData) throws CryptographyException {
     return signatureData == null ? null :
         new ProfilePublicKey.a(
             signatureData.getTimestamp(),
@@ -230,7 +232,7 @@ public class Adapter1_19_2R1 implements VersionAdapter {
         );
   }
 
-  public static SignatureData fromNMS(ProfilePublicKey.a signatureData) {
+  private static SignatureData fromNMS(ProfilePublicKey.a signatureData) {
     return signatureData == null ? null :
         new SignatureData(
             signatureData.b(),
@@ -239,7 +241,7 @@ public class Adapter1_19_2R1 implements VersionAdapter {
         );
   }
 
-  public static RegistryCodec fromNMS(IRegistryCustom.Dimension codec) {
+  private static RegistryCodec fromNMS(IRegistryCustom.Dimension codec) {
     Set<DimensionType> dimensionTypes = new LinkedHashSet<>();
 
     IRegistry<DimensionManager> dimensionCodec = codec.a(IRegistry.O).orElseThrow();
@@ -347,14 +349,14 @@ public class Adapter1_19_2R1 implements VersionAdapter {
     return new RegistryCodec(dimensionTypes, biomeTypes, chatTypes);
   }
 
-  public static GlobalBlockPos fromNMS(GlobalPos globalPos) {
+  private static GlobalBlockPos fromNMS(GlobalPos globalPos) {
     return new GlobalBlockPos(
         globalPos.a().a().toString(), // identifier
         new BlockPos(globalPos.b().u(), globalPos.b().v(), globalPos.b().w()) // block position
     );
   }
 
-  public static ChatStyle fromNMS(ChatModifier modifier) {
+  private static ChatStyle fromNMS(ChatModifier modifier) {
     return new ChatStyle(
         Optional.ofNullable(modifier.a()).map(ChatHexColor::b).orElse(null), // color
         modifier.b() ? true : null, // bold
@@ -367,7 +369,7 @@ public class Adapter1_19_2R1 implements VersionAdapter {
     );
   }
 
-  public static ItemStack fromNMS(net.minecraft.world.item.ItemStack itemStack) {
+  private static ItemStack fromNMS(net.minecraft.world.item.ItemStack itemStack) {
     if (itemStack.d().b()) { // present
       return new ItemStack(
           IRegistry.Y.a(itemStack.d().a()), // item id ; TODO: Material class, mappings
@@ -379,7 +381,7 @@ public class Adapter1_19_2R1 implements VersionAdapter {
     }
   }
 
-  public static Ingredient fromNMS(RecipeItemStack recipeItemStack) {
+  private static Ingredient fromNMS(RecipeItemStack recipeItemStack) {
     return new Ingredient(
         Arrays.stream(recipeItemStack.a())
             .map(Adapter1_19_2R1::fromNMS)
@@ -423,6 +425,7 @@ public class Adapter1_19_2R1 implements VersionAdapter {
 
     // PLAY
 
+    outboundRemapper.put(PacketPlayOutSpawnEntity.class, VersionAdapter.wrapOutbound(this::remapSpawnEntity));
     outboundRemapper.put(PacketPlayOutServerDifficulty.class, VersionAdapter.wrapOutbound(this::remapChangeDifficulty));
     outboundRemapper.put(PacketPlayOutCustomPayload.class, VersionAdapter.wrapOutbound(this::remapPluginMessage));
     outboundRemapper.put(PacketPlayOutKickDisconnect.class, VersionAdapter.wrapOutbound(this::remapDisconnect));
@@ -546,6 +549,24 @@ public class Adapter1_19_2R1 implements VersionAdapter {
         packet.b(), // message id
         packet.c().toString(), // channel
         packet.d() // data
+    );
+  }
+
+  private SpawnEntity remapSpawnEntity(PacketPlayOutSpawnEntity packet) {
+    return new SpawnEntity(
+        packet.b(), // entity id
+        packet.c(), // uuid
+        IRegistry.X.a(packet.d()), // type
+        packet.e(), // x
+        packet.f(), // y
+        packet.g(), // z
+        packet.k(), // pitch
+        packet.l(), // yaw
+        packet.m(), // head yaw
+        packet.n(), // data
+        packet.h(), // velocity x
+        packet.i(), // velocity y
+        packet.j()  // velocity z
     );
   }
 
