@@ -5,13 +5,49 @@ import com.jnngl.reprotocol.ConnectionState;
 import com.jnngl.reprotocol.Packet;
 import com.jnngl.reprotocol.adapter.VersionAdapter;
 import com.jnngl.reprotocol.data.BlockPos;
+import com.jnngl.reprotocol.data.CatVariant;
+import com.jnngl.reprotocol.data.Direction;
+import com.jnngl.reprotocol.data.FrogVariant;
 import com.jnngl.reprotocol.data.GameProfile;
 import com.jnngl.reprotocol.data.GlobalBlockPos;
 import com.jnngl.reprotocol.data.ItemStack;
+import com.jnngl.reprotocol.data.PaintingVariant;
 import com.jnngl.reprotocol.data.PlayerListData;
+import com.jnngl.reprotocol.data.Pose;
+import com.jnngl.reprotocol.data.Rotation;
 import com.jnngl.reprotocol.data.SignatureData;
+import com.jnngl.reprotocol.data.VillagerData;
+import com.jnngl.reprotocol.data.VillagerProfession;
+import com.jnngl.reprotocol.data.VillagerType;
 import com.jnngl.reprotocol.data.chat.ChatStyle;
 import com.jnngl.reprotocol.data.datapack.Tag;
+import com.jnngl.reprotocol.data.entity.metadata.BlockMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.BooleanMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.ByteMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.CatVariantMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.ChatMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.DirectionMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.EntityMetadata;
+import com.jnngl.reprotocol.data.entity.metadata.EntityMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.FloatMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.FrogVariantMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.GlobalPosMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.ItemStackMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.NBTMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.OptChatMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.OptPositionMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.OptUUIDMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.OptVarintMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.PaintingVariantMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.ParticleMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.PoseMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.PositionMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.RotationMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.StringMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.VarintMetadataItem;
+import com.jnngl.reprotocol.data.entity.metadata.VillagerMetadataItem;
+import com.jnngl.reprotocol.data.nbt.TagCompound;
+import com.jnngl.reprotocol.data.particle.AmbientEntityEffectParticle;
 import com.jnngl.reprotocol.data.recipe.CookingRecipe;
 import com.jnngl.reprotocol.data.recipe.Ingredient;
 import com.jnngl.reprotocol.data.recipe.Recipe;
@@ -42,6 +78,8 @@ import com.jnngl.reprotocol.packet.play.PluginMessage;
 import com.jnngl.reprotocol.packet.play.ServerPlayerAbilities;
 import com.jnngl.reprotocol.packet.play.ServerSetHeldItem;
 import com.jnngl.reprotocol.packet.play.SetCenterChunk;
+import com.jnngl.reprotocol.packet.play.SetEntityMetadata;
+import com.jnngl.reprotocol.packet.play.SetEntityVelocity;
 import com.jnngl.reprotocol.packet.play.SetRenderDistance;
 import com.jnngl.reprotocol.packet.play.SetSimulationDistance;
 import com.jnngl.reprotocol.packet.play.SpawnEntity;
@@ -58,12 +96,20 @@ import com.jnngl.reprotocol.remapper.InboundPacketRemapper;
 import com.jnngl.reprotocol.remapper.OutboundPacketRemapper;
 import com.jnngl.reprotocol.remapper.PacketRemapper;
 import com.jnngl.reprotocol.util.ExceptionUtil;
+import com.jnngl.reprotocol.util.MinecraftVersion;
 import com.mojang.datafixers.util.Either;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.ints.IntList;
+import java.util.List;
+import java.util.OptionalInt;
+import java.util.UUID;
+import net.minecraft.core.BlockPosition;
+import net.minecraft.core.EnumDirection;
 import net.minecraft.core.GlobalPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.IRegistry;
 import net.minecraft.core.IRegistryCustom;
+import net.minecraft.core.Vector3f;
 import net.minecraft.network.EnumProtocol;
 import net.minecraft.network.PacketDataSerializer;
 import net.minecraft.network.chat.ChatHexColor;
@@ -74,7 +120,9 @@ import net.minecraft.network.protocol.game.ClientboundSetSimulationDistancePacke
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import net.minecraft.network.protocol.game.PacketPlayOutAbilities;
 import net.minecraft.network.protocol.game.PacketPlayOutCustomPayload;
+import net.minecraft.network.protocol.game.PacketPlayOutEntityMetadata;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityStatus;
+import net.minecraft.network.protocol.game.PacketPlayOutEntityVelocity;
 import net.minecraft.network.protocol.game.PacketPlayOutHeldItemSlot;
 import net.minecraft.network.protocol.game.PacketPlayOutKickDisconnect;
 import net.minecraft.network.protocol.game.PacketPlayOutLogin;
@@ -100,10 +148,13 @@ import net.minecraft.network.protocol.status.PacketStatusInPing;
 import net.minecraft.network.protocol.status.PacketStatusInStart;
 import net.minecraft.network.protocol.status.PacketStatusOutPong;
 import net.minecraft.network.protocol.status.PacketStatusOutServerInfo;
+import net.minecraft.network.syncher.DataWatcher;
+import net.minecraft.network.syncher.DataWatcherRegistry;
 import net.minecraft.resources.MinecraftKey;
 import net.minecraft.tags.TagNetworkSerialization;
 import net.minecraft.util.CryptographyException;
 import net.minecraft.util.MinecraftEncryption;
+import net.minecraft.world.entity.EntityPose;
 import net.minecraft.world.entity.player.ProfilePublicKey;
 import net.minecraft.world.inventory.RecipeBookType;
 import net.minecraft.world.item.crafting.RecipeCooking;
@@ -116,6 +167,8 @@ import net.minecraft.world.item.crafting.ShapelessRecipes;
 import net.minecraft.world.level.biome.BiomeBase;
 import net.minecraft.world.level.biome.BiomeFog;
 import net.minecraft.world.level.biome.BiomeParticles;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.IBlockData;
 import net.minecraft.world.level.dimension.DimensionManager;
 import sun.misc.Unsafe;
 
@@ -350,6 +403,10 @@ public class Adapter1_19_2R1 implements VersionAdapter {
   }
 
   private static GlobalBlockPos fromNMS(GlobalPos globalPos) {
+    if (globalPos == null) {
+      return null;
+    }
+
     return new GlobalBlockPos(
         globalPos.a().a().toString(), // identifier
         new BlockPos(globalPos.b().u(), globalPos.b().v(), globalPos.b().w()) // block position
@@ -387,6 +444,167 @@ public class Adapter1_19_2R1 implements VersionAdapter {
             .map(Adapter1_19_2R1::fromNMS)
             .collect(Collectors.toList()) // items
     );
+  }
+
+  @SuppressWarnings("unchecked")
+  private static EntityMetadata fromNMS(List<DataWatcher.Item<?>> items) {
+    EntityMetadata metadata = new EntityMetadata();
+    if (items == null) {
+      return metadata;
+    }
+
+    items.forEach(item -> {
+      int index = item.a().a();
+      int typeID = DataWatcherRegistry.b(item.a().b());
+      Object value = item.b();
+      EntityMetadataItem<?> instance = EntityMetadata.REGISTRY.getRegistry(MinecraftVersion.MINECRAFT_1_19_1).get(typeID);
+      switch (typeID) {
+        case 0 -> // Byte
+            ((ByteMetadataItem) instance).setValue((Byte) value);
+
+        case 1 -> // VarInt
+            ((VarintMetadataItem) instance).setValue((Integer) value);
+
+        case 2 -> // Float
+            ((FloatMetadataItem) instance).setValue((Float) value);
+
+        case 3 -> // String
+            ((StringMetadataItem) instance).setValue((String) value);
+
+        case 4 -> { // Chat
+          IChatBaseComponent component = (IChatBaseComponent) value;
+          ((ChatMetadataItem) instance).setValue(fromNMS(component));
+        }
+
+        case 5 -> { // OptChat
+          Optional<IChatBaseComponent> optional = (Optional<IChatBaseComponent>) value;
+          ((OptChatMetadataItem) instance).setValue(fromNMS(optional.orElse(null)));
+        }
+
+        case 6 -> { // ItemStack
+          net.minecraft.world.item.ItemStack itemStack = (net.minecraft.world.item.ItemStack) value;
+          ((ItemStackMetadataItem) instance).setValue(fromNMS(itemStack));
+        }
+
+        case 7 -> // Boolean
+            ((BooleanMetadataItem) instance).setValue((Boolean) value);
+
+        case 8 -> { // Rotation
+          Vector3f vector3f = (Vector3f) value;
+          ((RotationMetadataItem) instance).setValue(new Rotation(vector3f.b(), vector3f.c(), vector3f.d()));
+        }
+
+        case 9 -> { // Position
+          BlockPosition blockPosition = (BlockPosition) value;
+          ((PositionMetadataItem) instance).setValue(new BlockPos(blockPosition.u(), blockPosition.v(), blockPosition.w()));
+        }
+
+        case 10 -> { // OptPosition
+          Optional<BlockPosition> optional = (Optional<BlockPosition>) value;
+          OptPositionMetadataItem optPosition = (OptPositionMetadataItem) instance;
+          if (optional.isPresent()) {
+            BlockPosition blockPosition = optional.get();
+            optPosition.setValue(new BlockPos(blockPosition.u(), blockPosition.v(), blockPosition.w()));
+          } else {
+            optPosition.setValue(null);
+          }
+        }
+
+        case 11 -> { // Direction
+          EnumDirection direction = (EnumDirection) value;
+          ((DirectionMetadataItem) instance).setValue(fromNMS(direction));
+        }
+
+        case 12 -> { // OptUUID
+          Optional<UUID> optional = (Optional<UUID>) value;
+          ((OptUUIDMetadataItem) instance).setValue(optional.orElse(null));
+        }
+
+        case 13 -> { // Block
+          Optional<IBlockData> optional = (Optional<IBlockData>) value;
+          BlockMetadataItem block = (BlockMetadataItem) instance;
+          if (optional.isPresent()) {
+            block.setValue(Block.i(optional.get()));
+          } else {
+            block.setValue(0);
+          }
+        }
+
+        case 14 -> // NBT
+            ((NBTMetadataItem) instance).setValue(new TagCompound("")); // TODO: NBT
+
+        case 15 -> // Particle
+            ((ParticleMetadataItem) instance).setValue(AmbientEntityEffectParticle.INSTANCE); // TODO: Particles
+
+        case 16 -> { // Villager
+          net.minecraft.world.entity.npc.VillagerData villagerData = (net.minecraft.world.entity.npc.VillagerData) value;
+          ((VillagerMetadataItem) instance).setValue(fromNMS(villagerData));
+        }
+
+        case 17 -> { // OptVarint
+          OptionalInt optional = (OptionalInt) value;
+          ((OptVarintMetadataItem) instance).setValue(optional.stream().boxed().findFirst().orElse(null));
+        }
+
+        case 18 -> { // Pose
+          EntityPose pose = (EntityPose) value;
+          ((PoseMetadataItem) instance).setValue(fromNMS(pose));
+        }
+
+        case 19 -> { // Cat
+          net.minecraft.world.entity.animal.CatVariant cat = (net.minecraft.world.entity.animal.CatVariant) value;
+          ((CatVariantMetadataItem) instance).setValue(fromNMS(cat));
+        }
+
+        case 20 -> { // Frog
+          net.minecraft.world.entity.animal.FrogVariant frog = (net.minecraft.world.entity.animal.FrogVariant) value;
+          ((FrogVariantMetadataItem) instance).setValue(fromNMS(frog));
+        }
+
+        case 21 -> { // GlobalPos
+          Optional<GlobalPos> optional = (Optional<GlobalPos>) value;
+          ((GlobalPosMetadataItem) instance).setValue(fromNMS(optional.orElse(null)));
+        }
+
+        case 22 -> { // Painting
+          net.minecraft.world.entity.decoration.PaintingVariant painting = ((Holder<net.minecraft.world.entity.decoration.PaintingVariant>) value).a();
+          ((PaintingVariantMetadataItem) instance).setValue(fromNMS(painting));
+        }
+
+        default -> ((EntityMetadataItem<Object>) instance).setValue(value);
+      }
+      metadata.setItem(index, instance);
+    });
+
+    return metadata;
+  }
+
+  private static Direction fromNMS(EnumDirection direction) {
+    return Direction.values()[direction.ordinal()];
+  }
+
+  private static VillagerData fromNMS(net.minecraft.world.entity.npc.VillagerData villagerData) {
+    return new VillagerData(
+        VillagerType.REGISTRY.getRegistry(MinecraftVersion.MINECRAFT_1_19_1).get(IRegistry.ao.a(villagerData.a())),
+        VillagerProfession.REGISTRY.getRegistry(MinecraftVersion.MINECRAFT_1_19_1).get(IRegistry.ap.a(villagerData.b())),
+        villagerData.c()
+    );
+  }
+
+  private static Pose fromNMS(EntityPose pose) {
+    return Pose.values()[pose.ordinal()];
+  }
+
+  private static CatVariant fromNMS(net.minecraft.world.entity.animal.CatVariant cat) {
+    return CatVariant.REGISTRY.getRegistry(MinecraftVersion.MINECRAFT_1_19_1).get(IRegistry.bK.a(cat));
+  }
+
+  private static FrogVariant fromNMS(net.minecraft.world.entity.animal.FrogVariant frog) {
+    return FrogVariant.REGISTRY.getRegistry(MinecraftVersion.MINECRAFT_1_19_1).get(IRegistry.bM.a(frog));
+  }
+
+  private static PaintingVariant fromNMS(net.minecraft.world.entity.decoration.PaintingVariant painting) {
+    return PaintingVariant.REGISTRY.getRegistry(MinecraftVersion.MINECRAFT_1_19_1).get(IRegistry.ac.a(painting));
   }
 
   @Override
@@ -438,6 +656,8 @@ public class Adapter1_19_2R1 implements VersionAdapter {
     outboundRemapper.put(PacketPlayOutHeldItemSlot.class, VersionAdapter.wrapOutbound(this::remapServerSetHeldItem));
     outboundRemapper.put(PacketPlayOutViewCentre.class, VersionAdapter.wrapOutbound(this::remapSetCenterChunk));
     outboundRemapper.put(PacketPlayOutViewDistance.class, VersionAdapter.wrapOutbound(this::remapSetRenderDistance));
+    outboundRemapper.put(PacketPlayOutEntityMetadata.class, VersionAdapter.wrapOutbound(this::remapSetEntityMetadata));
+    outboundRemapper.put(PacketPlayOutEntityVelocity.class, VersionAdapter.wrapOutbound(this::remapSetEntityVelocity));
     outboundRemapper.put(ClientboundSetSimulationDistancePacket.class, VersionAdapter.wrapOutbound(this::remapSetSimulationDistance));
     outboundRemapper.put(ClientboundSystemChatPacket.class, VersionAdapter.wrapOutbound(this::remapSystemChat));
     outboundRemapper.put(PacketPlayOutRecipeUpdate.class, VersionAdapter.wrapOutbound(this::remapUpdateRecipes));
@@ -699,6 +919,22 @@ public class Adapter1_19_2R1 implements VersionAdapter {
   private SetRenderDistance remapSetRenderDistance(PacketPlayOutViewDistance packet) {
     return new SetRenderDistance(
         packet.b() // view distance
+    );
+  }
+
+  private SetEntityMetadata remapSetEntityMetadata(PacketPlayOutEntityMetadata packet) {
+    return new SetEntityMetadata(
+        packet.c(), // entity id
+        fromNMS(packet.b()) // metadata items
+    );
+  }
+
+  private SetEntityVelocity remapSetEntityVelocity(PacketPlayOutEntityVelocity packet) {
+    return new SetEntityVelocity(
+        packet.b(), // entity id
+        (short) packet.c(), // velocity x
+        (short) packet.d(), // velocity y
+        (short) packet.e() // velocity z
     );
   }
 

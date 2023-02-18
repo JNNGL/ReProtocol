@@ -22,6 +22,8 @@ import com.jnngl.reprotocol.packet.play.PluginMessage;
 import com.jnngl.reprotocol.packet.play.ServerPlayerAbilities;
 import com.jnngl.reprotocol.packet.play.ServerSetHeldItem;
 import com.jnngl.reprotocol.packet.play.SetCenterChunk;
+import com.jnngl.reprotocol.packet.play.SetEntityMetadata;
+import com.jnngl.reprotocol.packet.play.SetEntityVelocity;
 import com.jnngl.reprotocol.packet.play.SetRenderDistance;
 import com.jnngl.reprotocol.packet.play.SetSimulationDistance;
 import com.jnngl.reprotocol.packet.play.SpawnEntity;
@@ -128,6 +130,8 @@ public class GenericPacketRegistry {
                         .put(0x4A, ServerSetHeldItem::new)
                         .put(0x4B, SetCenterChunk::new)
                         .put(0x4C, SetRenderDistance::new)
+                        .put(0x50, SetEntityMetadata::new)
+                        .put(0x52, SetEntityVelocity::new)
                         .put(0x5A, SetSimulationDistance::new)
                         .put(0x62, SystemChat::new)
                         .put(0x6A, UpdateRecipes::new)

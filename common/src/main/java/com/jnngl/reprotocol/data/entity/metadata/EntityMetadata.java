@@ -5,6 +5,8 @@ import com.jnngl.reprotocol.data.registry.VersionRegistry;
 import com.jnngl.reprotocol.util.MapBuilder;
 import com.jnngl.reprotocol.util.MinecraftVersion;
 
+import com.jnngl.reprotocol.util.ProtocolUtils;
+import io.netty.buffer.ByteBuf;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -51,6 +53,26 @@ public class EntityMetadata {
 
   private int ridx = 0;
   private int widx = 0;
+
+  public void encode(ByteBuf buf, MinecraftVersion version) {
+    entries.forEach((index, value) -> {
+      buf.writeByte(index);
+      ProtocolUtils.writeVarInt(buf, REGISTRY.getRegistry(version).getID(value));
+      value.encode(buf, version);
+    });
+
+    buf.writeByte(0xFF);
+  }
+
+  public void decode(MinecraftVersion version, ByteBuf buf) {
+    entries.clear();
+    byte index;
+    while ((index = buf.readByte()) != (byte) 0xFF) {
+      EntityMetadataItem<?> item = REGISTRY.getRegistry(version).get(ProtocolUtils.readVarInt(buf));
+      item.decode(buf, version);
+      entries.put(Byte.toUnsignedInt(index), item);
+    }
+  }
 
   public void setItem(int index, EntityMetadataItem<?> value) {
     if (value == null) {

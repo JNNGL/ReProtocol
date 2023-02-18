@@ -7,14 +7,11 @@ import com.jnngl.reprotocol.listener.HandshakeListener;
 import com.jnngl.reprotocol.packet.GenericPacketDecoder;
 import com.jnngl.reprotocol.packet.GenericPacketEncoder;
 import com.jnngl.reprotocol.packet.GenericPacketRegistry;
-import com.jnngl.reprotocol.packet.handshake.Handshake;
-import com.jnngl.reprotocol.packet.login.LoginSuccess;
 import com.jnngl.reprotocol.remapper.PacketRemapper;
 import com.jnngl.reprotocol.remapper.handler.InboundRemapHandler;
 import com.jnngl.reprotocol.remapper.handler.OutboundRemapHandler;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import org.bukkit.plugin.java.JavaPlugin;
 
