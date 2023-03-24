@@ -192,17 +192,17 @@ public class Adapter1_19_2R1 implements VersionAdapter {
 
   private static final Gson STATUS_GSON;
 
-  private static final Field BIOME_BASE$I;
-  private static final Field BIOME_BASE$L;
-  private static final Field BIOME_BASE$B$D;
-  private static final Field BIOME_PARTICLES$C;
-  private static final Field RECIPE_SMITHING$A;
-  private static final Field RECIPE_SMITHING$B;
-  private static final Field TAG_NETWORK$A$A;
-  private static final Field ENTITY_STATUS$A;
+  private static final MethodHandle BIOME_BASE$I;
+  private static final MethodHandle BIOME_BASE$L;
+  private static final MethodHandle BIOME_BASE$B$D;
+  private static final MethodHandle BIOME_PARTICLES$C;
+  private static final MethodHandle RECIPE_SMITHING$A;
+  private static final MethodHandle RECIPE_SMITHING$B;
+  private static final MethodHandle TAG_NETWORK$A$A;
+  private static final MethodHandle ENTITY_STATUS$A;
 
-  private static final Field ENC_BEGIN$A;
-  private static final Field ENC_BEGIN$B;
+  private static final MethodHandle ENC_BEGIN$A;
+  private static final MethodHandle ENC_BEGIN$B;
 
   private static final MethodHandle SYSTEM_CHAT_CONTENT_GETTER;
 
@@ -222,17 +222,35 @@ public class Adapter1_19_2R1 implements VersionAdapter {
               .findFirst().orElseThrow();
 
       // TODO: Replace with MethodHandles
-      (BIOME_BASE$I = BiomeBase.class.getDeclaredField("i")).setAccessible(true);
-      (BIOME_BASE$L = BiomeBase.class.getDeclaredField("l")).setAccessible(true);
-      (BIOME_BASE$B$D = BiomeBase$b.getDeclaredField("d")).setAccessible(true);
-      (BIOME_PARTICLES$C = BiomeParticles.class.getDeclaredField("c")).setAccessible(true);
-      (RECIPE_SMITHING$A = RecipeSmithing.class.getDeclaredField("a")).setAccessible(true);
-      (RECIPE_SMITHING$B = RecipeSmithing.class.getDeclaredField("b")).setAccessible(true);
-      (TAG_NETWORK$A$A = TagNetworkSerialization.a.class.getDeclaredField("a")).setAccessible(true);
-      (ENTITY_STATUS$A = PacketPlayOutEntityStatus.class.getDeclaredField("a")).setAccessible(true);
+      BIOME_BASE$I = MethodHandles.privateLookupIn(BiomeBase.class, MethodHandles.lookup())
+          .findGetter(BiomeBase.class, "i", BiomeBase$b);
 
-      (ENC_BEGIN$A = PacketLoginInEncryptionBegin.class.getDeclaredField("a")).setAccessible(true);
-      (ENC_BEGIN$B = PacketLoginInEncryptionBegin.class.getDeclaredField("b")).setAccessible(true);
+      BIOME_BASE$L = MethodHandles.privateLookupIn(BiomeBase.class, MethodHandles.lookup())
+          .findGetter(BiomeBase.class, "l", BiomeFog.class);
+
+      BIOME_BASE$B$D = MethodHandles.privateLookupIn(BiomeBase$b, MethodHandles.lookup())
+          .findGetter(BiomeBase$b, "d", BiomeBase.TemperatureModifier.class);
+
+      BIOME_PARTICLES$C = MethodHandles.privateLookupIn(BiomeParticles.class, MethodHandles.lookup())
+          .findGetter(BiomeParticles.class, "c", float.class);
+
+      RECIPE_SMITHING$A = MethodHandles.privateLookupIn(RecipeSmithing.class, MethodHandles.lookup())
+          .findGetter(RecipeSmithing.class, "a", RecipeItemStack.class);
+
+      RECIPE_SMITHING$B = MethodHandles.privateLookupIn(RecipeSmithing.class, MethodHandles.lookup())
+          .findGetter(RecipeSmithing.class, "b", RecipeItemStack.class);
+
+      TAG_NETWORK$A$A = MethodHandles.privateLookupIn(TagNetworkSerialization.a.class, MethodHandles.lookup())
+          .findGetter(TagNetworkSerialization.a.class, "a", Map.class);
+
+      ENTITY_STATUS$A = MethodHandles.privateLookupIn(PacketPlayOutEntityStatus.class, MethodHandles.lookup())
+          .findGetter(PacketPlayOutEntityStatus.class, "a", int.class);
+
+      ENC_BEGIN$A = MethodHandles.privateLookupIn(PacketLoginInEncryptionBegin.class, MethodHandles.lookup())
+          .findSetter(PacketLoginInEncryptionBegin.class, "a", byte[].class);
+
+      ENC_BEGIN$B = MethodHandles.privateLookupIn(PacketLoginInEncryptionBegin.class, MethodHandles.lookup())
+          .findSetter(PacketLoginInEncryptionBegin.class, "b", Either.class);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
     }
@@ -330,7 +348,7 @@ public class Adapter1_19_2R1 implements VersionAdapter {
     biomeCodec.f().forEach(entry -> {
       try {
         BiomeBase biomeBase = entry.getValue();
-        BiomeFog biomeFog = (BiomeFog) BIOME_BASE$L.get(biomeBase);
+        BiomeFog biomeFog = (BiomeFog) BIOME_BASE$L.invokeExact(biomeBase);
 
         biomeTypes.add(new BiomeType(
             entry.getKey().a().toString(), // key
@@ -341,8 +359,8 @@ public class Adapter1_19_2R1 implements VersionAdapter {
             null, // scale
             biomeBase.h(), // downfall
             null, // category
-            ((BiomeBase.TemperatureModifier) BIOME_BASE$B$D.get(
-                BIOME_BASE$I.get(biomeBase))).a(), // temperature modifier
+            ((BiomeBase.TemperatureModifier) BIOME_BASE$B$D.invokeExact(
+                BIOME_BASE$I.invokeExact(biomeBase))).a(), // temperature modifier
             biomeFog.d(), // sky color
             biomeFog.c(), // water fog color
             biomeFog.a(), // fog color
@@ -370,15 +388,15 @@ public class Adapter1_19_2R1 implements VersionAdapter {
             biomeFog.h().map(biomeParticles -> {
               try {
                 return new BiomeType.Particle(
-                    BIOME_PARTICLES$C.getFloat(biomeParticles), // probability
+                    (float) BIOME_PARTICLES$C.invokeExact(biomeParticles), // probability
                     Objects.requireNonNull(IRegistry.aa.b(biomeParticles.a().b())).a() // type
                 );
-              } catch (ReflectiveOperationException e) {
+              } catch (Throwable e) {
                 throw new RuntimeException(e);
               }
             }).orElse(null) // particle
         ));
-      } catch (ReflectiveOperationException e) {
+      } catch (Throwable e) {
         throw new RuntimeException(e);
       }
     });
@@ -701,16 +719,16 @@ public class Adapter1_19_2R1 implements VersionAdapter {
       PacketLoginInEncryptionBegin nmsPacket = (PacketLoginInEncryptionBegin)
           UNSAFE.allocateInstance(PacketLoginInEncryptionBegin.class);
 
-      ENC_BEGIN$A.set(nmsPacket, packet.getSharedSecret());
+      ENC_BEGIN$A.invokeExact(nmsPacket, packet.getSharedSecret());
       if (packet.isHasVerifyToken()) {
-        ENC_BEGIN$B.set(nmsPacket, Either.left(packet.getVerifyToken()));
+        ENC_BEGIN$B.invokeExact(nmsPacket, Either.left(packet.getVerifyToken()));
       } else {
-        ENC_BEGIN$B.set(nmsPacket, Either.right(
+        ENC_BEGIN$B.invokeExact(nmsPacket, Either.right(
             new MinecraftEncryption.b(packet.getSalt(), packet.getMessageSignature())));
       }
 
       return nmsPacket;
-    } catch (ReflectiveOperationException e) {
+    } catch (Throwable e) {
       throw new RuntimeException(e);
     }
   }
@@ -813,10 +831,10 @@ public class Adapter1_19_2R1 implements VersionAdapter {
   private EntityEvent remapEntityEvent(PacketPlayOutEntityStatus packet) {
     try {
       return new EntityEvent(
-          ENTITY_STATUS$A.getInt(packet), // entity id
+          (int) ENTITY_STATUS$A.invokeExact(packet), // entity id
           packet.b() // status
       );
-    } catch (ReflectiveOperationException e) {
+    } catch (Throwable e) {
       throw new RuntimeException(e);
     }
   }
@@ -1011,15 +1029,15 @@ public class Adapter1_19_2R1 implements VersionAdapter {
                     .orElse(null), // ingredient
                 fromNMS(recipe.c())
             );
-          } else if (recipe instanceof RecipeSmithing) {
+          } else if (recipe instanceof RecipeSmithing smithing) {
             try {
               return new SmithingRecipe(
                   type, recipeID,
-                  fromNMS((RecipeItemStack) RECIPE_SMITHING$A.get(recipe)),
-                  fromNMS((RecipeItemStack) RECIPE_SMITHING$B.get(recipe)),
+                  fromNMS((RecipeItemStack) RECIPE_SMITHING$A.invokeExact(smithing)),
+                  fromNMS((RecipeItemStack) RECIPE_SMITHING$B.invokeExact(smithing)),
                   fromNMS(recipe.c())
               );
-            } catch (ReflectiveOperationException e) {
+            } catch (Throwable e) {
               throw new RuntimeException(e);
             }
           }
@@ -1037,7 +1055,7 @@ public class Adapter1_19_2R1 implements VersionAdapter {
               try {
                 return new AbstractMap.SimpleEntry<>(
                     entry.getKey().a().toString(),
-                    ((Map<MinecraftKey, IntList>) TAG_NETWORK$A$A.get(entry.getValue()))
+                    ((Map<MinecraftKey, IntList>) TAG_NETWORK$A$A.invokeExact(entry.getValue()))
                         .entrySet().stream().map(
                             tagEntry -> new Tag(
                                 tagEntry.getKey().toString(),
@@ -1045,7 +1063,7 @@ public class Adapter1_19_2R1 implements VersionAdapter {
                             )
                         ).collect(Collectors.toList())
                 );
-              } catch (ReflectiveOperationException e) {
+              } catch (Throwable e) {
                 throw new RuntimeException(e);
               }
             }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
